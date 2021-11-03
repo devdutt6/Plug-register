@@ -48,7 +48,13 @@ exports.SignUp = async (req,res) => {
 exports.SignIn = async (req,res) => {
     try{
         const  { email,phone,password } = req.body;
-        const result = await User.findOne({ email: email , phone: phone});
+
+        if(!email){
+            var result = await User.findOne({ phone: phone });
+        }
+        else{
+            var result = await User.findOne({ email: email });
+        }
 
         if(!result){
             res.status(402).json({
@@ -60,20 +66,20 @@ exports.SignIn = async (req,res) => {
         }
 
         var e_password = result.e_password;
-        var salt = result.salt;
-        var name = result.name;
         var isEmailVerified = result.isEmailVerified;
         var isNumberVerified = result.isNumberVerified;
 
-        if( (isEmailVerified === true || isNumberVerified === true) ){
+        if( isEmailVerified === true || isNumberVerified === true ){
+            var salt = result.salt;
             if(e_password === SecurePassword(password , salt)){
+                var name = result.name;
                 var payload = { email: email, name: name };
                 var access_token = jwt.sign( payload , process.env.AUTH , { expiresIn: '8h' });
                 res.status(200).json({
                     "isSuccess": true,
                     "status": 200,
                     "message": "User SignedIn successfully",
-                    "data": rev,
+                    "data": result,
                     "access_token": access_token
                 })
             }
@@ -81,8 +87,7 @@ exports.SignIn = async (req,res) => {
                 res.status(202).json({
                     "isSuccess": true,
                     "status": 202,
-                    "message": "password does not match",
-                    "data": rev
+                    "message": "password does not match"
                 })
             }
         }

@@ -12,5 +12,11 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.0.12",
     "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.1.0"
+  },
+  "scripts": {
+    "test": "nodemon app.js"
   }
 }
