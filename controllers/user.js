@@ -191,8 +191,6 @@ exports.GetStations = async (req,res) => {
         })
     }
     catch(err){
-        // console.log(err , err.message , err.stack);
-        console.log(err);
         res.status(500).json({
             "isSuccess": false,
             "status": 500,
@@ -201,3 +199,90 @@ exports.GetStations = async (req,res) => {
         })
     }
 }
+
+exports.ForgotPassword = async (req,res) => {
+    try{
+        const { email , phone } = req.body;
+        if(!phone){
+            var result = await User.findOne({ email: email}).lean();
+        }
+        else{
+            var result = await User.findOne({ phone: phone}).lean();
+        }
+
+        if(!result){
+            res.status(402).json({
+                "isSuccess": false,
+                "status": 402,
+                "message": "No such User exist",
+                "data": {}
+            })
+        }
+        const phone1 = result.phone;
+        const fullName = result.fullName;
+
+        const payload = { email: email, phone: phone1 };
+        const token = jwt.sign( payload ,process.env.FORGOTAUTH );
+
+        // sendEmail( email ,fullName, token);
+
+        res.status(200).json({
+            "isSuccess": true,
+            "status": 200,
+            "message": "Email sent successfully",
+            "data": {
+                access_token: token,
+                email :email
+            }
+        })
+    }
+    catch(err){
+        console.log(err.message);
+        res.status(500).json({
+            "isSuccess": false,
+            "status": 500,
+            "message": "Internal Server Error",
+            "data": {}
+        })
+    }
+}
+
+exports.ResetPassword = async (req,res) => {
+    try{
+        const email = req.email;
+        const { password } = req.body;
+
+        const result = await User.findOne({email: email});
+        const salt = result.salt;
+        const e_password = SecurePassword(password , salt);
+        result.e_password = e_password;
+
+        const rev = await result.save();
+
+        if(!rev){
+            res.status(402).json({
+                "isSuccess": false,
+                "status": 402,
+                "message": "Failed to change password",
+                "data": {}
+            })
+        }
+
+        res.status(200).json({
+                "isSuccess": false,
+                "status": 200,
+                "message": "Password changed successfully",
+                "data": rev
+        })
+    }
+    catch(err){
+        console.log(err.message);
+        res.status(500).json({
+            "isSuccess": false,
+            "status": 500,
+            "message": "Internal Server Error",
+            "data": {}
+        })
+    }
+}
+
