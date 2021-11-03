@@ -8,10 +8,19 @@ const UserSchema = new mongoose.Schema({
     phone: {
         type: Number
     },
-    name: {
+    fullName: {
         type: String
     },
+    // lastName: {
+    //     type: String
+    // },
+    // middleName: {
+    //     type: String
+    // },
     e_password: {
+        type: String
+    },
+    vehicleType: {
         type: String
     },
     salt: {

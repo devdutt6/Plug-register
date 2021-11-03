@@ -1,18 +1,24 @@
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const { Station } = require('../modules/station');
 const { User } = require('../modules/user');
 const { SecurePassword } = require('../utils/SecurePassword');
 
 exports.SignUp = async (req,res) => {
     try{
-        const  { email,phone,name,password } = req.body;
+        const  { email,phone,fullName,vehicleType,password } = req.body;
+        // firstName,lastName,middleName
         const result = new User();
 
         const salt = result.salt;
         result.e_password = SecurePassword(password , salt);
         result.email = email;
         result.phone = phone;
-        result.name = name;
+        result.fullName = fullName;
+        // result.firstName = firstName;
+        // result.lastName = lastName;
+        // result.middleName = middleName;
+        result.vehicleType = vehicleType;
 
         let rev = await result.save();
 
@@ -65,16 +71,20 @@ exports.SignIn = async (req,res) => {
             })
         }
 
-        var e_password = result.e_password;
-        var isEmailVerified = result.isEmailVerified;
-        var isNumberVerified = result.isNumberVerified;
+        const e_password = result.e_password;
+        const isEmailVerified = result.isEmailVerified;
+        const isNumberVerified = result.isNumberVerified;
 
         if( isEmailVerified === true || isNumberVerified === true ){
             var salt = result.salt;
             if(e_password === SecurePassword(password , salt)){
-                var name = result.name;
-                var payload = { email: email, name: name };
-                var access_token = jwt.sign( payload , process.env.AUTH , { expiresIn: '8h' });
+                const fullName = result.fullName;
+                const phone = result.phone;
+
+                const payload = { email: email, fullName: fullName, phone: phone };
+
+                const access_token = jwt.sign( payload , process.env.AUTH , { expiresIn: '8h' });
+
                 res.status(200).json({
                     "isSuccess": true,
                     "status": 200,
@@ -103,6 +113,86 @@ exports.SignIn = async (req,res) => {
     }
     catch(err){
         console.log(err , err.message , err.stack);
+        res.status(500).json({
+            "isSuccess": false,
+            "status": 500,
+            "message": "Internal Server Error",
+            "data": {}
+        })
+    }
+}
+
+exports.AddStation = async (req,res) => {
+    try{
+        const email = req.email;
+        const fullName = req.fullName;
+        const phone = req.phone;
+        const { address ,latitude ,longitude ,connector ,kwpower ,isFast ,photo ,isParkingAvailable ,isParkingFree ,parkingCharge ,isAvailableAllTime ,startTime ,endTime } = req.body;
+
+        const result = new Station();
+
+        result.email = email;
+        result.fullName = fullName;
+        result.phone = phone;
+        result.address = address;
+        result.latitude = latitude;
+        result.longitude = longitude;
+        result.connector = connector;
+        result.kwpower = kwpower;
+        result.isFast = isFast;
+        result.photo = photo;
+        result.isParkingAvailable = isParkingAvailable;
+        result.isParkingFree = isParkingFree;
+        result.parkingCharge = parkingCharge;
+        result.isAvailableAllTime = isAvailableAllTime;
+        result.startTime = startTime;
+        result.endTime = endTime;
+
+        const rev = await result.save();
+
+        if(!rev){
+            res.status(402).json({
+                "isSuccess": false,
+                "status": 402,
+                "message": "Failed to store Station",
+                "data": {}
+            })
+        }
+
+
+        res.status(200).json({
+            "isSuccess": true,
+            "status": 200,
+            "message": "Station Registered",
+            "data": rev
+        })
+    }
+    catch(err){
+        console.log(err , err.message , err.stack);
+        res.status(500).json({
+            "isSuccess": false,
+            "status": 500,
+            "message": "Internal Server Error",
+            "data": {}
+        })
+    }
+}
+
+exports.GetStations = async (req,res) => {
+    try{
+        const rev = await Station.find({});
+        // console.log(rev)
+
+        res.status(200).json({
+            "isSuccess": true,
+            "status": 200,
+            "message": "Got all registered Charging Stations",
+            "data": rev
+        })
+    }
+    catch(err){
+        // console.log(err , err.message , err.stack);
+        console.log(err);
         res.status(500).json({
             "isSuccess": false,
             "status": 500,

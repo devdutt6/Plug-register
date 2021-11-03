@@ -11,7 +11,7 @@ var port = process.env.PORT;
 
 var connection_string = `mongodb://localhost:27017/${process.env.NAME}`
 
-mongoose.connect(connection_string , { useUnifiedTopology: true })
+mongoose.connect(connection_string , { useNewUrlParser: true,useUnifiedTopology: true })
 .then(data => {
     console.log('DataBase connected');
 })
